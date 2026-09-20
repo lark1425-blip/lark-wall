@@ -8,7 +8,7 @@ const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_KEY = process.env.ADMIN_KEY || "люси_знает_всё"; // СМЕНИ НА СВОЙ КЛЮЧ!
+const ADMIN_KEY = process.env.ADMIN_KEY || "маргаритка"; // СМЕНИ НА СВОЙ КЛЮЧ!
 
 // === ПОДКЛЮЧЕНИЕ К БАЗЕ ===
 const pool = new Pool({

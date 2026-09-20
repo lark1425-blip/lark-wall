@@ -778,7 +778,7 @@ function showMain() {
 
 // ===== СООБЩЕНИЯ =====
 async function loadMessages() {
-  const res = await api("/api/messages");
+  const res = await api("/api/my-messages");
   if (res.ok) {
     state.messages = res.messages;
     renderWall();

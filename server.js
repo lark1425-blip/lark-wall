@@ -133,7 +133,9 @@ app.get("/api/my-messages", async (req, res) => {
   if (!req.session.userId) return res.json({ ok: false, error: "нужно войти" });
 
   const result = await pool.query(`
-    SELECT id, text, answer, deleted, created_at, answered_at
+    SELECT id, text, answer, deleted, 
+           created_at::bigint as created_at, 
+           answered_at::bigint as answered_at
     FROM messages
     WHERE user_id = $1
     ORDER BY created_at DESC
@@ -173,8 +175,11 @@ app.get("/api/admin/messages", async (req, res) => {
   const result = await pool.query(`
     SELECT 
       m.id, m.user_id, m.user_name, m.text, m.answer, m.deleted,
-      m.created_at, m.answered_at,
-      u.created_at as user_created, u.last_seen, u.visits
+      m.created_at::bigint as created_at, 
+      m.answered_at::bigint as answered_at,
+      u.created_at::bigint as user_created, 
+      u.last_seen::bigint as last_seen, 
+      u.visits
     FROM messages m
     JOIN users u ON m.user_id = u.id
     ORDER BY m.created_at DESC
@@ -188,7 +193,10 @@ app.get("/api/admin/users", async (req, res) => {
 
   const result = await pool.query(`
     SELECT 
-      u.id, u.name, u.created_at, u.last_seen, u.visits,
+      u.id, u.name, 
+      u.created_at::bigint as created_at, 
+      u.last_seen::bigint as last_seen, 
+      u.visits,
       COUNT(m.id) as message_count
     FROM users u
     LEFT JOIN messages m ON m.user_id = u.id
@@ -203,11 +211,20 @@ app.get("/api/admin/user/:id", async (req, res) => {
   if (!req.session.isAdmin) return res.json({ ok: false, error: "доступ запрещён" });
 
   const userId = parseInt(req.params.id);
-  const userRes = await pool.query("SELECT * FROM users WHERE id = $1", [userId]);
+  const userRes = await pool.query(`
+    SELECT id, name, 
+           created_at::bigint as created_at, 
+           last_seen::bigint as last_seen, 
+           visits
+    FROM users WHERE id = $1
+  `, [userId]);
+  
   if (userRes.rows.length === 0) return res.json({ ok: false, error: "пользователь не найден" });
 
   const msgRes = await pool.query(`
-    SELECT id, text, answer, deleted, created_at, answered_at
+    SELECT id, text, answer, deleted, 
+           created_at::bigint as created_at, 
+           answered_at::bigint as answered_at
     FROM messages
     WHERE user_id = $1
     ORDER BY created_at DESC

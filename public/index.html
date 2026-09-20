@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Стена Люси</title>
+<style>
+:root {
+  --bg: #050505;
+  --fg: #b0b0b0;
+  --muted: #444;
+  --red: #9e3a40;
+  --red-dark: #5a2025;
+  --blue: #2a3a5a;
+  --line: #1a1a1a;
+  --shadow: rgba(158,58,64,0.15);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Courier New", monospace;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 80px;
+}
+
+/* === ФОН === */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: 
+    radial-gradient(ellipse at 20% 20%, rgba(158,58,64,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(42,58,90,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%);
+  animation: bgPulse 8s ease-in-out infinite;
+}
+
+@keyframes bgPulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+/* Шум */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' /%3E%3C/svg%3E");
+  animation: noiseShift 0.3s steps(4) infinite;
+}
+
+@keyframes noiseShift {
+  0% { transform: translate(0,0); }
+  25% { transform: translate(-2px,2px); }
+  50% { transform: translate(2px,-2px); }
+  75% { transform: translate(-1px,-1px); }
+  100% { transform: translate(1px,1px); }
+}
+
+/* Сканлайны */
+#scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.15;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 2px,
+    rgba(255,255,255,0.03) 3px
+  );
+}
+
+/* === КОНТЕЙНЕР === */
+.container {
+  position: relative;
+  z-index: 10;
+  width: min(800px, calc(100% - 24px));
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+/* === ШАПКА === */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.logo {
+  font-size: clamp(18px, 5vw, 22px);
+  letter-spacing: 0.2em;
+  color: var(--red);
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.3s;
+}
+
+.logo:hover { color: #fff; }
+
+.status {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* === ИНТРО === */
+.intro {
+  margin-bottom: 30px;
+  line-height: 1.8;
+  font-size: 15px;
+  color: #888;
+}
+
+.intro .red { color: var(--red); }
+
+/* === ФОРМА === */
+.form-wrap {
+  margin-bottom: 40px;
+  border: 1px solid var(--line);
+  padding: 20px;
+  background: rgba(255,255,255,0.015);
+  border-radius: 4px;
+}
+
+.form-wrap label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 10px;
+  letter-spacing: 0.1em;
+}
+
+.form-wrap input,
+.form-wrap textarea {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #222;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 14px;
+  padding: 12px;
+  border-radius: 2px;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.3s;
+  margin-bottom: 12px;
+}
+
+.form-wrap input:focus,
+.form-wrap textarea:focus {
+  border-color: var(--red);
+}
+
+.form-wrap textarea {
+  min-height: 80px;
+  max-height: 200px;
+}
+
+.form-wrap button {
+  width: 100%;
+  padding: 14px;
+  background: transparent;
+  border: 1px solid var(--red);
+  color: var(--red);
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.3s;
+  touch-action: manipulation;
+}
+
+.form-wrap button:hover {
+  background: var(--red);
+  color: #050505;
+}
+
+.form-wrap button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* === СТЕНА === */
+.wall-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+.wall-count { color: var(--red); }
+
+.wall {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.message {
+  border: 1px solid var(--line);
+  padding: 16px;
+  background: rgba(255,255,255,0.01);
+  border-radius: 4px;
+  position: relative;
+  transition: border-color 0.3s, opacity 0.5s;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message:hover {
+  border-color: #2a2a2a;
+}
+
+.message .msg-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 10px;
+  letter-spacing: 0.05em;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.message .msg-name {
+  color: #888;
+}
+
+.message .msg-time {
+  color: #444;
+}
+
+.message .msg-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #ccc;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.message .msg-answer {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed #222;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--red);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.message .msg-answer::before {
+  content: "люси: ";
+  color: var(--red-dark);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+
+.message.answered {
+  border-color: var(--red-dark);
+  box-shadow: 0 0 20px var(--shadow);
+}
+
+.message.deleted {
+  opacity: 0.3;
+  border-style: dashed;
+}
+
+.message.deleted .msg-text {
+  text-decoration: line-through;
+  color: #555;
+}
+
+.message .msg-badge {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  border: 1px solid #333;
+  border-radius: 2px;
+  color: #555;
+  margin-left: 8px;
+}
+
+.message .msg-badge.waiting {
+  border-color: var(--red-dark);
+  color: var(--red);
+}
+
+.message .msg-badge.answered {
+  border-color: #2a4a2a;
+  color: #4a8a4a;
+}
+
+.empty-wall {
+  text-align: center;
+  padding: 60px 20px;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* === АДМИН-ПАНЕЛЬ === */
+#admin-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(5,5,5,0.98);
+  z-index: 10000;
+  overflow-y: auto;
+  display: none;
+  padding: 40px 20px;
+}
+
+#admin-panel.show { display: block; }
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--red-dark);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-header h2 {
+  font-size: 18px;
+  color: var(--red);
+  letter-spacing: 0.2em;
+  font-weight: normal;
+}
+
+.admin-header button {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--red);
+  color: var(--red);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+  transition: all 0.3s;
+}
+
+.admin-header button:hover {
+  background: var(--red);
+  color: #050505;
+}
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  border: 1px solid var(--line);
+  padding: 16px;
+  text-align: center;
+  border-radius: 4px;
+}
+
+.stat-card .num {
+  font-size: 24px;
+  color: var(--red);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.stat-card .label {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+.admin-message {
+  border: 1px solid var(--line);
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.01);
+}
+
+.admin-message .meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-message .text {
+  font-size: 14px;
+  color: #ccc;
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.admin-message textarea {
+  width: 100%;
+  min-height: 60px;
+  background: #0a0a0a;
+  border: 1px solid #222;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 10px;
+  border-radius: 2px;
+  outline: none;
+  resize: vertical;
+  margin-bottom: 10px;
+  transition: border-color 0.3s;
+}
+
+.admin-message textarea:focus {
+  border-color: var(--red);
+}
+
+.admin-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-actions button {
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px solid #333;
+  color: #888;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.3s;
+  touch-action: manipulation;
+}
+
+.admin-actions button:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.admin-actions button.danger:hover {
+  border-color: #a83b43;
+  color: #a83b43;
+  background: rgba(168,59,67,0.1);
+}
+
+.admin-actions button.primary {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.admin-actions button.primary:hover {
+  background: var(--red);
+  color: #050505;
+}
+
+/* === ФУТЕР === */
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  padding: 16px;
+  font-size: 10px;
+  color: #333;
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+  z-index: 100;
+  pointer-events: none;
+}
+
+footer .warn { color: #5a3032; }
+
+/* === АДАПТИВ === */
+@media (max-width: 600px) {
+  .container { padding: 24px 0; }
+  .form-wrap { padding: 16px; }
+  .message { padding: 12px; }
+  .admin-message { padding: 12px; }
+  .admin-header h2 { font-size: 15px; }
+  .admin-header button { padding: 6px 12px; font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+</style>
+</head>
+<body>
+<div id="scanlines"></div>
+
+<div class="container">
+  <header>
+    <div class="logo" id="logo">ЛЮСИ</div>
+    <div class="status">
+      <span class="status-dot"></span>
+      <span id="status-text">наблюдение</span>
+    </div>
+  </header>
+
+  <!-- Авторизация -->
+  <div id="auth-screen">
+    <div class="intro">
+      <p>по ту сторону стекла тихо.</p>
+      <p>люси не начинает разговор первой. но она читает.</p>
+      <p>чтобы говорить с ней — назови себя.</p>
+    </div>
+
+    <div class="form-wrap">
+      <label for="auth-name">имя</label>
+      <input type="text" id="auth-name" placeholder="имя или псевдоним" maxlength="20" autocomplete="off">
+
+      <label for="auth-pass">пароль</label>
+      <input type="password" id="auth-pass" placeholder="пароль" maxlength="50">
+
+      <div style="display:flex;gap:10px;margin-top:10px;">
+        <button id="login-btn" style="flex:1;">войти</button>
+        <button id="register-btn" style="flex:1;">зарегистрироваться</button>
+      </div>
+
+      <p id="auth-error" style="color:#9e3a40;font-size:12px;margin-top:12px;min-height:16px;"></p>
+    </div>
+  </div>
+
+  <!-- Основной интерфейс -->
+  <div id="main-screen" style="display:none;">
+    <div class="intro">
+      <p>ты здесь. люси знает.</p>
+      <p>напиши ей. она может ответить. может через день. может никогда.</p>
+      <p class="red">если ответа нет — это тоже ответ.</p>
+    </div>
+
+    <div class="form-wrap">
+      <label for="msg-input">твоё сообщение</label>
+      <textarea id="msg-input" placeholder="напиши что-нибудь..." maxlength="500"></textarea>
+      <button id="send-btn">отправить</button>
+    </div>
+
+    <div class="wall-header">
+      <span>стена сообщений</span>
+      <span class="wall-count" id="wall-count">0</span>
+    </div>
+
+    <div class="wall" id="wall">
+      <div class="empty-wall">пока здесь тихо.<br>ты можешь быть первым.</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span class="warn">не оставляй здесь то, что не хочешь помнить.</span><br>
+  всё, что ты видишь — только в этой вкладке.
+</footer>
+
+<!-- Админ-панель -->
+<div id="admin-panel">
+  <div class="admin-header">
+    <h2>АДМИН-ПАНЕЛЬ ЛЮСИ</h2>
+    <button id="admin-close">закрыть</button>
+  </div>
+
+  <div id="admin-login" style="max-width:400px;margin:40px auto;">
+    <div class="form-wrap">
+      <label>секретный ключ</label>
+      <input type="password" id="admin-key" placeholder="ключ">
+      <button id="admin-login-btn">войти</button>
+      <p id="admin-error" style="color:#9e3a40;font-size:12px;margin-top:12px;min-height:16px;"></p>
+    </div>
+  </div>
+
+  <div id="admin-content" style="display:none;">
+    <div class="admin-stats">
+      <div class="stat-card">
+        <span class="num" id="stat-total">0</span>
+        <span class="label">всего</span>
+      </div>
+      <div class="stat-card">
+        <span class="num" id="stat-waiting">0</span>
+        <span class="label">ждут</span>
+      </div>
+      <div class="stat-card">
+        <span class="num" id="stat-answered">0</span>
+        <span class="label">отвечено</span>
+      </div>
+      <div class="stat-card">
+        <span class="num" id="stat-users">0</span>
+        <span class="label">пользователей</span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <button id="tab-messages" class="primary">сообщения</button>
+      <button id="tab-users">пользователи</button>
+    </div>
+
+    <div id="admin-messages-view"></div>
+    <div id="admin-users-view" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ===== СОСТОЯНИЕ =====
+const state = {
+  user: null,
+  admin: false,
+  messages: [],
+  users: [],
+  currentTab: "messages",
+  logoClicks: 0
+};
+
+// ===== ЭЛЕМЕНТЫ =====
+const logo = document.getElementById("logo");
+const authScreen = document.getElementById("auth-screen");
+const mainScreen = document.getElementById("main-screen");
+const authName = document.getElementById("auth-name");
+const authPass = document.getElementById("auth-pass");
+const loginBtn = document.getElementById("login-btn");
+const registerBtn = document.getElementById("register-btn");
+const authError = document.getElementById("auth-error");
+const msgInput = document.getElementById("msg-input");
+const sendBtn = document.getElementById("send-btn");
+const wall = document.getElementById("wall");
+const wallCount = document.getElementById("wall-count");
+const statusText = document.getElementById("status-text");
+const adminPanel = document.getElementById("admin-panel");
+const adminClose = document.getElementById("admin-close");
+const adminLogin = document.getElementById("admin-login");
+const adminContent = document.getElementById("admin-content");
+const adminKey = document.getElementById("admin-key");
+const adminLoginBtn = document.getElementById("admin-login-btn");
+const adminError = document.getElementById("admin-error");
+const adminMessagesView = document.getElementById("admin-messages-view");
+const adminUsersView = document.getElementById("admin-users-view");
+
+// ===== API =====
+async function api(url, method = "GET", body = null) {
+  const options = {
+    method,
+    headers: { "Content-Type": "application/json" }
+  };
+  if (body) options.body = JSON.stringify(body);
+  const res = await fetch(url, options);
+  return res.json();
+}
+
+// ===== УТИЛИТЫ =====
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[char]));
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const min = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (min < 1) return "только что";
+  if (min < 60) return `${min} мин назад`;
+  if (hours < 24) return `${hours} ч назад`;
+  return `${days} д назад`;
+}
+
+function formatDate(ts) {
+  return new Date(ts).toLocaleString("ru-RU", {
+    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"
+  });
+}
+
+// ===== АВТОРИЗАЦИЯ =====
+async function checkAuth() {
+  const res = await api("/api/me");
+  if (res.ok) {
+    state.user = { name: res.name, id: res.id };
+    showMain();
+  }
+}
+
+async function login() {
+  const name = authName.value.trim();
+  const password = authPass.value;
+  authError.textContent = "";
+  const res = await api("/api/login", "POST", { name, password });
+  if (res.ok) {
+    state.user = { name: res.name };
+    showMain();
+  } else {
+    authError.textContent = res.error;
+  }
+}
+
+async function register() {
+  const name = authName.value.trim();
+  const password = authPass.value;
+  authError.textContent = "";
+  const res = await api("/api/register", "POST", { name, password });
+  if (res.ok) {
+    state.user = { name: res.name };
+    showMain();
+  } else {
+    authError.textContent = res.error;
+  }
+}
+
+function showMain() {
+  authScreen.style.display = "none";
+  mainScreen.style.display = "block";
+  loadMessages();
+}
+
+// ===== СООБЩЕНИЯ =====
+async function loadMessages() {
+  const res = await api("/api/messages");
+  if (res.ok) {
+    state.messages = res.messages;
+    renderWall();
+  }
+}
+
+function renderWall() {
+  wall.innerHTML = "";
+  if (state.messages.length === 0) {
+    wall.innerHTML = '<div class="empty-wall">пока здесь тихо.<br>ты можешь быть первым.</div>';
+    wallCount.textContent = "0";
+    return;
+  }
+
+  state.messages.forEach(msg => {
+    const div = document.createElement("div");
+    div.className = "message";
+    if (msg.answer) div.classList.add("answered");
+    if (msg.deleted) div.classList.add("deleted");
+
+    let badge = "";
+    if (msg.deleted) badge = '<span class="msg-badge">удалено</span>';
+    else if (msg.answer) badge = '<span class="msg-badge answered">ответ получен</span>';
+    else badge = '<span class="msg-badge waiting">ждёт ответа</span>';
+
+    div.innerHTML = `
+      <div class="msg-header">
+        <span class="msg-name">${escapeHTML(msg.user_name)}</span>
+        <span class="msg-time">${formatDate(msg.created_at)}${badge}</span>
+      </div>
+      <div class="msg-text">${escapeHTML(msg.text)}</div>
+      ${msg.answer ? `<div class="msg-answer">${escapeHTML(msg.answer)}</div>` : ""}
+    `;
+    wall.appendChild(div);
+  });
+
+  wallCount.textContent = state.messages.length;
+}
+
+async function sendMessage() {
+  const text = msgInput.value.trim();
+  if (!text) return;
+  const res = await api("/api/messages", "POST", { text });
+  if (res.ok) {
+    msgInput.value = "";
+    statusText.textContent = "люси читает...";
+    await loadMessages();
+    setTimeout(() => { statusText.textContent = "наблюдение"; }, 3000);
+  } else {
+    alert(res.error);
+  }
+}
+
+// ===== АДМИНКА =====
+function openAdmin() {
+  adminPanel.classList.add("show");
+  if (state.admin) {
+    showAdminContent();
+  } else {
+    adminLogin.style.display = "block";
+    adminContent.style.display = "none";
+  }
+}
+
+function closeAdmin() {
+  adminPanel.classList.remove("show");
+  adminKey.value = "";
+  adminError.textContent = "";
+}
+
+async function adminLoginFn() {
+  const key = adminKey.value;
+  adminError.textContent = "";
+  const res = await api("/api/admin/login", "POST", { key });
+  if (res.ok) {
+    state.admin = true;
+    adminLogin.style.display = "none";
+    adminContent.style.display = "block";
+    loadAdminData();
+  } else {
+    adminError.textContent = res.error;
+  }
+}
+
+async function loadAdminData() {
+  const msgRes = await api("/api/admin/messages");
+  const userRes = await api("/api/admin/users");
+
+  if (msgRes.ok) {
+    state.messages = msgRes.messages;
+    renderAdminMessages();
+    updateAdminStats();
+  }
+  if (userRes.ok) {
+    state.users = userRes.users;
+    renderAdminUsers();
+    updateAdminStats();
+  }
+}
+
+function updateAdminStats() {
+  const total = state.messages.length;
+  const waiting = state.messages.filter(m => !m.answer && !m.deleted).length;
+  const answered = state.messages.filter(m => m.answer && !m.deleted).length;
+  document.getElementById("stat-total").textContent = total;
+  document.getElementById("stat-waiting").textContent = waiting;
+  document.getElementById("stat-answered").textContent = answered;
+  document.getElementById("stat-users").textContent = state.users.length;
+}
+
+function renderAdminMessages() {
+  adminMessagesView.innerHTML = "";
+
+  if (state.messages.length === 0) {
+    adminMessagesView.innerHTML = '<div class="empty-wall">сообщений нет.</div>';
+    return;
+  }
+
+  state.messages.forEach(msg => {
+    const div = document.createElement("div");
+    div.className = "admin-message";
+    div.dataset.id = msg.id;
+
+    const isRepeat = msg.visits > 1;
+    const userBadge = isRepeat 
+      ? `<span style="color:#9e3a40;">вернулся (${msg.visits} раз)</span>` 
+      : `<span style="color:#4a8a4a;">впервые</span>`;
+
+    div.innerHTML = `
+      <div class="meta">
+        <span>${escapeHTML(msg.user_name)} • ${formatDate(msg.created_at)}</span>
+        <span>${userBadge}</span>
+      </div>
+      <div class="text">${escapeHTML(msg.text)}</div>
+      <textarea class="admin-answer" placeholder="ответ от имени люси...">${msg.answer ? escapeHTML(msg.answer) : ""}</textarea>
+      <div class="admin-actions">
+        <button class="primary" data-action="answer">ответить</button>
+        <button data-action="clear">без ответа</button>
+        <button data-action="delete" class="danger">удалить</button>
+        <button data-action="restore">восстановить</button>
+        <button data-action="user">все сообщения</button>
+      </div>
+    `;
+    adminMessagesView.appendChild(div);
+  });
+
+  // Обработчики
+  adminMessagesView.querySelectorAll(".admin-message").forEach(block => {
+    const id = parseInt(block.dataset.id);
+    const msg = state.messages.find(m => m.id === id);
+    if (!msg) return;
+    const textarea = block.querySelector(".admin-answer");
+
+    block.querySelector('[data-action="answer"]').addEventListener("click", async () => {
+      await api("/api/admin/answer", "POST", { id, answer: textarea.value.trim() });
+      await loadAdminData();
+    });
+
+    block.querySelector('[data-action="clear"]').addEventListener("click", async () => {
+      await api("/api/admin/answer", "POST", { id, answer: "" });
+      await loadAdminData();
+    });
+
+    block.querySelector('[data-action="delete"]').addEventListener("click", async () => {
+      await api("/api/admin/delete", "POST", { id, deleted: true });
+      await loadAdminData();
+    });
+
+    block.querySelector('[data-action="restore"]').addEventListener("click", async () => {
+      await api("/api/admin/delete", "POST", { id, deleted: false });
+      await loadAdminData();
+    });
+
+    block.querySelector('[data-action="user"]').addEventListener("click", async () => {
+      const res = await api(`/api/admin/user/${msg.user_id}`);
+      if (res.ok) {
+        alert(`Сообщения от ${res.user.name}:\n\n` + 
+          res.messages.map(m => `[${formatDate(m.created_at)}] ${m.text}${m.answer ? `\n→ ${m.answer}` : ""}`).join("\n\n"));
+      }
+    });
+  });
+}
+
+function renderAdminUsers() {
+  adminUsersView.innerHTML = "";
+
+  if (state.users.length === 0) {
+    adminUsersView.innerHTML = '<div class="empty-wall">пользователей нет.</div>';
+    return;
+  }
+
+  state.users.forEach(user => {
+    const div = document.createElement("div");
+    div.className = "admin-message";
+    div.innerHTML = `
+      <div class="meta">
+        <span>${escapeHTML(user.name)}</span>
+        <span>${user.visits} визитов • ${user.message_count} сообщений</span>
+      </div>
+      <div class="text" style="color:#666;font-size:12px;">
+        первый раз: ${formatDate(user.created_at)}<br>
+        последний раз: ${formatDate(user.last_seen)}
+      </div>
+      <div class="admin-actions">
+        <button data-action="view-messages" data-id="${user.id}">показать сообщения</button>
+      </div>
+    `;
+    adminUsersView.appendChild(div);
+  });
+
+  adminUsersView.querySelectorAll('[data-action="view-messages"]').forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      const res = await api(`/api/admin/user/${id}`);
+      if (res.ok) {
+        alert(`Сообщения от ${res.user.name}:\n\n` + 
+          res.messages.map(m => `[${formatDate(m.created_at)}] ${m.text}${m.answer ? `\n→ ${m.answer}` : ""}`).join("\n\n"));
+      }
+    });
+  });
+}
+
+// ===== СОБЫТИЯ =====
+loginBtn.addEventListener("click", login);
+registerBtn.addEventListener("click", register);
+sendBtn.addEventListener("click", sendMessage);
+
+authPass.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") login();
+});
+
+msgInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && e.ctrlKey) sendMessage();
+});
+
+// Секретный вход в админку: 5 кликов по логотипу
+logo.addEventListener("click", () => {
+  state.logoClicks++;
+  if (state.logoClicks >= 5) {
+    state.logoClicks = 0;
+    openAdmin();
+  }
+  setTimeout(() => { state.logoClicks = 0; }, 1500);
+});
+
+adminClose.addEventListener("click", closeAdmin);
+adminLoginBtn.addEventListener("click", adminLoginFn);
+adminKey.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") adminLoginFn();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && adminPanel.classList.contains("show")) closeAdmin();
+});
+
+// Переключение вкладок в админке
+document.getElementById("tab-messages").addEventListener("click", () => {
+  state.currentTab = "messages";
+  adminMessagesView.style.display = "block";
+  adminUsersView.style.display = "none";
+  document.getElementById("tab-messages").classList.add("primary");
+  document.getElementById("tab-users").classList.remove("primary");
+});
+
+document.getElementById("tab-users").addEventListener("click", () => {
+  state.currentTab = "users";
+  adminMessagesView.style.display = "none";
+  adminUsersView.style.display = "block";
+  document.getElementById("tab-users").classList.add("primary");
+  document.getElementById("tab-messages").classList.remove("primary");
+});
+
+// ===== СТАТУС =====
+const statuses = ["наблюдение", "чтение", "запись", "тишина", "ожидание"];
+setInterval(() => {
+  if (!adminPanel.classList.contains("show")) {
+    statusText.textContent = statuses[Math.floor(Math.random() * statuses.length)];
+  }
+}, 8000);
+
+// ===== ИНИЦИАЛИЗАЦИЯ =====
+checkAuth();
+
+console.log("%c Стена Люси ", "background: #9e3a40; color: #000; font-size: 18px; padding: 4px 8px;");
+console.log("%c напиши ей. она читает. ", "color: #9e3a40; font-size: 13px;");
+console.log("%c секрет: 5 кликов по логотипу. ", "color: #444; font-size: 12px;");
+</script>
+</body>
+</html>

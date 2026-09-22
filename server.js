@@ -5,10 +5,57 @@ const cookieParser = require("cookie-parser");
 const bcrypt = require("bcryptjs");
 const { Pool } = require("pg");
 const path = require("path");
+const https = require("https");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_KEY = process.env.ADMIN_KEY || "маргаритка"; // СМЕНИ НА СВОЙ КЛЮЧ!
+const ADMIN_KEY = process.env.ADMIN_KEY || "люси_знает_всё";
+
+// === TELEGRAM УВЕДОМЛЕНИЯ ===
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+function sendTelegramNotification(text, userName) {
+  if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) {
+    console.log("Telegram не настроен, уведомление пропущено");
+    return;
+  }
+
+  const message = `🔔 Новое сообщение от ${userName}:\n\n${text}`;
+  const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+
+  const data = JSON.stringify({
+    chat_id: TELEGRAM_CHAT_ID,
+    text: message
+  });
+
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(data)
+    }
+  };
+
+  const req = https.request(url, options, (res) => {
+    let body = "";
+    res.on("data", (chunk) => body += chunk);
+    res.on("end", () => {
+      if (res.statusCode !== 200) {
+        console.error("Ошибка Telegram:", body);
+      } else {
+        console.log("Telegram уведомление отправлено");
+      }
+    });
+  });
+
+  req.on("error", (err) => {
+    console.error("Ошибка соединения с Telegram:", err.message);
+  });
+
+  req.write(data);
+  req.end();
+}
 
 // === ПОДКЛЮЧЕНИЕ К БАЗЕ ===
 const pool = new Pool({
@@ -91,7 +138,6 @@ app.post("/api/register", async (req, res) => {
     res.json({ ok: false, error: "ошибка сервера" });
   }
 });
-
 app.post("/api/login", async (req, res) => {
   try {
     const { name, password } = req.body;
@@ -156,6 +202,9 @@ app.post("/api/messages", async (req, res) => {
     VALUES ($1, $2, $3, $4)
   `, [req.session.userId, req.session.userName, text.trim(), now()]);
 
+  // Отправляем уведомление в Telegram
+  sendTelegramNotification(text.trim(), req.session.userName);
+
   res.json({ ok: true });
 });
 
@@ -216,7 +265,7 @@ app.get("/api/admin/user/:id", async (req, res) => {
            created_at::bigint as created_at, 
            last_seen::bigint as last_seen, 
            visits
-    FROM users WHERE id = $1
+           FROM users WHERE id = $1
   `, [userId]);
   
   if (userRes.rows.length === 0) return res.json({ ok: false, error: "пользователь не найден" });
@@ -259,4 +308,5 @@ app.post("/api/admin/delete", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Люси слушает на порту ${PORT}`);
   console.log(`Админ-ключ: ${ADMIN_KEY}`);
+  console.log(`Telegram: ${TELEGRAM_TOKEN ? "настроен" : "не настроен"}`);
 });
